@@ -202,7 +202,7 @@ onUnmounted(() => {
             <span>微信赞助</span>
           </div>
         </div>
-        <p class="sponsor-note">赞助后请联系管理员开通权限</p>
+        <p class="sponsor-note">赞助费用仅用于支持平台运营，感谢您的理解与支持！</p>
       </div>
     </el-dialog>
 
