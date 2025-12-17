@@ -163,6 +163,10 @@ onMounted(() => {
     fetchPurchasedPapers()
     userStore.fetchUserInfo()
   }
+  // 移动端检测（把 handler 抽到外层以便后续移除）
+  // 见文件顶部的 `handleResize` 定义
+  handleResize()
+  window.addEventListener('resize', handleResize)
   
   // 监听新真题发布事件
   socket.on('paper_approved', (data: any) => {
@@ -180,6 +184,7 @@ onMounted(() => {
 onUnmounted(() => {
   socket.off('paper_approved')
   socket.off('paper_taken_down')
+  window.removeEventListener('resize', handleResize)
 })
 
 // --- 预览相关逻辑 ---
@@ -302,8 +307,14 @@ const handleDownload = async (paper: any) => {
 
 // --- 上传相关逻辑 ---
 const uploadVisible = ref(false)
+const drawerVisible = ref(false)
 const uploadLoading = ref(false)
-const uploadRef = ref<UploadInstance>()
+const uploadRefDialog = ref<UploadInstance | null>(null)
+const uploadRefDrawer = ref<UploadInstance | null>(null)
+const isMobile = ref(false)
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 480
+}
 const uploadForm = ref({
   title: '',
   subject: '',
@@ -316,7 +327,8 @@ const handleFileChange = (file: any) => {
   const isLt50M = file.size / 1024 / 1024 < 50
   if (!isLt50M) {
     ElMessage.error('上传文件大小不能超过 50MB!')
-    uploadRef.value?.clearFiles()
+    uploadRefDialog.value?.clearFiles()
+    uploadRefDrawer.value?.clearFiles()
     uploadForm.value.file = null
     return
   }
@@ -349,9 +361,11 @@ const submitUpload = async () => {
     })
     ElMessage.success('上传成功！审核通过后将显示在列表中')
     uploadVisible.value = false
+    drawerVisible.value = false
     // 重置表单
     uploadForm.value = { title: '', subject: '', teacher: '', year: new Date().getFullYear(), file: null }
-    uploadRef.value?.clearFiles()
+    uploadRefDialog.value?.clearFiles()
+    uploadRefDrawer.value?.clearFiles()
     // 刷新列表
     fetchPapers()
     fetchFilters() // 刷新筛选选项
@@ -370,7 +384,11 @@ const openUploadModal = () => {
     ElMessage.warning('请先登录')
     return
   }
-  uploadVisible.value = true
+  if (isMobile.value) {
+    drawerVisible.value = true
+  } else {
+    uploadVisible.value = true
+  }
 }
 </script>
 
@@ -590,7 +608,7 @@ const openUploadModal = () => {
     <el-dialog
       v-model="uploadVisible"
       title="上传真题"
-      width="500px"
+      width="460px"
       destroy-on-close
       center
       class="upload-dialog custom-dialog"
@@ -601,14 +619,14 @@ const openUploadModal = () => {
         </el-form-item>
         
         <el-row :gutter="20">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="课程名称" required>
               <el-select v-model="uploadForm.subject" placeholder="选择或输入课程" filterable allow-create default-first-option style="width: 100%">
                 <el-option v-for="sub in subjects.filter(s => s !== '全部')" :key="sub" :label="sub" :value="sub" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="授课老师">
               <el-input v-model="uploadForm.teacher" placeholder="例如：张三" />
             </el-form-item>
@@ -621,7 +639,7 @@ const openUploadModal = () => {
 
         <el-form-item label="文件上传 (PDF/图片/Word, Max 10MB)" required>
           <el-upload
-            ref="uploadRef"
+            ref="uploadRefDialog"
             class="upload-demo"
             drag
             action="#"
@@ -651,6 +669,68 @@ const openUploadModal = () => {
         </span>
       </template>
     </el-dialog>
+
+    <!-- 移动端底部抽屉上传（仅在手机上触发） -->
+    <el-drawer
+      v-model="drawerVisible"
+      title="上传真题"
+      direction="btt"
+      size="80vh"
+      class="upload-drawer"
+      destroy-on-close
+    >
+      <el-form :model="uploadForm" label-position="top" class="upload-form">
+        <el-form-item label="试卷标题" required>
+          <el-input v-model="uploadForm.title" placeholder="例如：2024-2025第一学期高等数学A期末真题" prefix-icon="Document" />
+        </el-form-item>
+        <el-row :gutter="12">
+          <el-col :span="24">
+            <el-form-item label="课程名称" required>
+              <el-select v-model="uploadForm.subject" placeholder="选择或输入课程" filterable allow-create default-first-option style="width: 100%">
+                <el-option v-for="sub in subjects.filter(s => s !== '全部')" :key="sub" :label="sub" :value="sub" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="授课老师">
+              <el-input v-model="uploadForm.teacher" placeholder="例如：张三" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="年份" required>
+           <el-input-number v-model="uploadForm.year" :min="2000" :max="2099" style="width: 100%" controls-position="right" />
+        </el-form-item>
+
+        <el-form-item label="文件上传 (PDF/图片/Word, Max 10MB)" required>
+          <el-upload
+            ref="uploadRefDrawer"
+            class="upload-demo"
+            drag
+            action="#"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+            :limit="1"
+          >
+            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+            <div class="el-upload__text">
+              拖拽文件到此处或 <em>点击上传</em>
+            </div>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持 PDF/Word/图片 格式，文件大小不超过 10MB
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div style="display:flex;gap:8px;justify-content:flex-end;padding:8px 0;">
+          <el-button @click="drawerVisible = false">取消</el-button>
+          <el-button type="primary" :loading="uploadLoading" @click="submitUpload">确认上传</el-button>
+        </div>
+      </template>
+    </el-drawer>
 
     <!-- 预览弹窗 -->
     <el-dialog
@@ -1361,5 +1441,89 @@ const openUploadModal = () => {
     height: 28px;
     font-size: 0.8rem;
   }
+}
+</style>
+
+<style>
+/* 上传弹窗（Dialog）响应式覆盖（全局，针对 Element Plus teleport 情况）*/
+.custom-dialog .el-dialog {
+  max-width: 480px !important; /* 桌面和较大屏幕限制为 480px */
+  width: auto !important;
+  margin: 0 auto !important;
+}
+.custom-dialog .el-dialog__body {
+  padding: 16px !important;
+}
+.upload-form {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.upload-demo {
+  width: 100%;
+}
+.el-upload--drag .el-upload__text em {
+  font-style: normal;
+  color: var(--primary-color);
+}
+
+@media (max-width: 480px) {
+  /* 更紧凑的移动端对话框：更小宽度、更小内边距与更小字体 */
+  .custom-dialog .el-dialog {
+/* 移动端抽屉样式调整 */
+.upload-drawer .el-drawer__body {
+  padding: 10px !important;
+}
+.upload-drawer .el-drawer__footer {
+  padding: 8px 10px !important;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.upload-drawer .el-form-item {
+  margin-bottom: 8px;
+}
+    max-width: 86vw !important; /* 更窄，确保左右留白 */
+    margin: 0 7vw !important; /* 在极小屏上保留足够间距 */
+  }
+  .custom-dialog .el-dialog__header {
+    padding: 8px 10px !important;
+    font-size: 15px !important;
+  }
+  .custom-dialog .el-dialog__body {
+    padding: 10px !important;
+    font-size: 13px !important;
+  }
+  .upload-demo {
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  .upload-form .el-form-item {
+    margin-bottom: 10px;
+  }
+  .el-input, .el-select, .el-input-number {
+    width: 100% !important;
+  }
+}
+</style>
+
+<style>
+/* 微调上传拖拽区，确保在小屏幕内不溢出并保持合理高度 */
+.el-upload--drag .el-upload__inner {
+  min-height: 110px;
+  padding: 10px;
+  box-sizing: border-box;
+  width: 100%;
+}
+.el-upload--drag {
+  width: 100%;
+}
+
+/* Footer 按钮更紧凑 */
+.custom-dialog .el-dialog__footer {
+  padding: 10px 12px !important;
+}
+.custom-dialog .el-dialog__footer .el-button {
+  padding: 6px 12px !important;
+  font-size: 13px !important;
 }
 </style>
