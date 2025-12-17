@@ -309,24 +309,26 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.stats-card {
+..stats-card {
   background: #fdf6ec;
-  padding: 15px 30px;
+  padding: 10px 16px;
   border-radius: 12px;
   border: 1px solid #faecd8;
+  min-width: 110px;
+  max-width: 160px;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   color: #e6a23c;
 }
 
 .stat-item .el-icon {
-  font-size: 24px;
-  margin-bottom: 5px;
+  font-size: 20px;
+  margin-bottom: 4px;
 }
 
 .stat-item .label {
@@ -335,8 +337,9 @@ onMounted(() => {
 }
 
 .stat-item .value {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .records-section {
