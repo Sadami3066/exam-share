@@ -276,7 +276,7 @@ router.get('/:id/download', auth, async (req, res) => {
 });
 
 // 预览真题 (在线查看，不扣券)
-router.get('/:id/preview', auth, async (req, res) => {
+router.get('/:id/preview', async (req, res) => {
   const paperId = req.params.id;
 
   try {

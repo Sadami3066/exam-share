@@ -59,9 +59,12 @@ const getFileFormat = (path: string) => {
 
 // 获取图片预览链接
 const getPreviewUrl = (paper: any) => {
-  if (!userStore.token) return ''
   // 使用相对路径，生产环境自动适配
-  return `/api/papers/${paper.id}/preview?token=${userStore.token}`
+  let url = `/api/papers/${paper.id}/preview`
+  if (userStore.token) {
+    url += `?token=${userStore.token}`
+  }
+  return url
 }
 
 // 管理员下架真题
@@ -181,11 +184,6 @@ onUnmounted(() => {
 
 // --- 预览相关逻辑 ---
 const handlePreview = async (paper: any) => {
-  if (!userStore.token) {
-    ElMessage.warning('请先登录')
-    return
-  }
-
   // 判断文件类型
   const isImg = isImage(paper.file_path)
   const isPdf = /\.pdf$/i.test(paper.file_path)
@@ -198,7 +196,10 @@ const handlePreview = async (paper: any) => {
   try {
     // 使用直接链接进行预览，利用浏览器的原生 PDF/图片 渲染能力
     // 同时也避免了 Blob 大文件下载导致的内存问题
-    const url = `/api/papers/${paper.id}/preview?token=${userStore.token}`
+    let url = `/api/papers/${paper.id}/preview`
+    if (userStore.token) {
+      url += `?token=${userStore.token}`
+    }
     
     previewUrl.value = url
     previewType.value = isPdf ? 'pdf' : 'image'
@@ -504,8 +505,8 @@ const openUploadModal = () => {
             title="下架" 
           />
 
-          <!-- 情况1：是图片且已登录 -> 显示缩略图 -->
-          <div class="card-preview" v-if="isImage(paper.file_path) && userStore.token" @click.stop="handlePreview(paper)" style="cursor: pointer;">
+          <!-- 情况1：是图片 -> 显示缩略图 -->
+          <div class="card-preview" v-if="isImage(paper.file_path)" @click.stop="handlePreview(paper)" style="cursor: pointer;">
             <el-image 
               :src="getPreviewUrl(paper)" 
               fit="cover" 
@@ -518,10 +519,6 @@ const openUploadModal = () => {
                 </div>
               </template>
             </el-image>
-          </div>
-          <!-- 情况2：是图片但未登录 -> 显示图片图标 -->
-          <div class="card-icon" v-else-if="isImage(paper.file_path)">
-             <el-icon><Picture /></el-icon>
           </div>
           <!-- 情况3：非图片 -> 显示文档图标 -->
           <div class="card-icon" v-else>
