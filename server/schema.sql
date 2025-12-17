@@ -53,3 +53,19 @@ CREATE TABLE IF NOT EXISTS downloads (
     paper_id INTEGER REFERENCES papers(id),
     downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 下面的 ALTER 语句用于在已有旧表时补齐缺失字段，保持 schema.sql 可被重复使用（幂等）
+-- 这样在一键部署时，如果目标数据库已经存在 users 表但缺少新字段，也会自动添加。
+
+-- 确保 users 表包含 last_check_in 字段（用于签到逻辑）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_check_in DATE;
+
+-- 常用备用字段：如果需要也一并补齐 is_sponsor（赞助者标识）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_sponsor BOOLEAN DEFAULT FALSE;
+
+-- 确保 account 字段存在并为 NOT NULL（如果你使用 account 登录字段）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account VARCHAR(50) UNIQUE;
+-- 将已有 username 迁移到 account（仅在 account 为空时执行）
+UPDATE users SET account = username WHERE account IS NULL;
+-- 将 account 设置为 NOT NULL（如果你确认所有用户都有 account）
+ALTER TABLE users ALTER COLUMN account SET NOT NULL;
