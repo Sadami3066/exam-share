@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import request from '../utils/request'
 import { ElMessage, ElMessageBox, type UploadInstance } from 'element-plus'
-import { Document, Download, Ticket, Camera } from '@element-plus/icons-vue'
+import { Document, Download, Camera } from '@element-plus/icons-vue' 
 
 const userStore = useUserStore()
 const activeTab = ref('uploads')
@@ -148,13 +148,7 @@ onMounted(() => {
           <div class="role-badge">{{ userStore.userInfo.role === 'admin' ? '管理员' : '普通用户' }}</div>
         </div>
       </div>
-      <div class="stats-card">
-        <div class="stat-item">
-          <el-icon><Ticket /></el-icon>
-          <span class="label">剩余下载券</span>
-          <span class="value">{{ userStore.userInfo.download_tickets || 0 }}</span>
-        </div>
-      </div>
+
     </div>
 
     <!-- 记录列表 -->
@@ -309,38 +303,7 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.stats-card {
-  background: #fdf6ec;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid #faecd8;
-  min-width: 110px;
-  max-width: 160px;
-}
 
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  color: #e6a23c;
-}
-
-.stat-item .el-icon {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
-
-.stat-item .label {
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-.stat-item .value {
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1;
-}
 
 .records-section {
   background: white;
