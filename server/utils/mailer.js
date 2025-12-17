@@ -24,16 +24,16 @@ exports.sendVerificationEmail = async (to, code) => {
   }
 
   await transporter.sendMail({
-    from: `"真题转转" <${process.env.SMTP_USER}>`,
+    from: `"转转真题" <${process.env.SMTP_USER}>`,
     to,
-    subject: '【真题转转】注册验证码',
+    subject: '【转转真题】注册验证码',
     text: `您的验证码是：${code}。有效期5分钟，请勿泄露给他人。`,
     html: `
       <div style="padding: 20px; background-color: #f5f7fa; font-family: sans-serif;">
         <div style="max-width: 500px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-          <h2 style="color: #409eff; margin-top: 0;">真题转转</h2>
+          <h2 style="color: #409eff; margin-top: 0;">转转真题</h2>
           <p style="font-size: 16px; color: #606266;">亲爱的用户：</p>
-          <p style="font-size: 16px; color: #606266;">您正在注册真题转转账号，您的验证码是：</p>
+          <p style="font-size: 16px; color: #606266;">您正在注册转转真题账号，您的验证码是：</p>
           <div style="background-color: #ecf5ff; color: #409eff; font-size: 24px; font-weight: bold; text-align: center; padding: 15px; border-radius: 6px; margin: 20px 0; letter-spacing: 4px;">
             ${code}
           </div>

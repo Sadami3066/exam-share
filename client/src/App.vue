@@ -118,7 +118,7 @@ onUnmounted(() => {
       <el-header class="header" :class="{ 'header-scrolled': isScrolled }">
         <div class="logo" @click="router.push('/')">
           <img src="/favicon.ico" class="logo-img" alt="logo" />
-          <span class="logo-text">真题转转</span>
+          <span class="logo-text">转转真题</span>
         </div>
         <div class="user-info">
           <template v-if="userStore.token">
@@ -213,7 +213,7 @@ onUnmounted(() => {
     <!-- 关于我们弹窗 -->
     <el-dialog v-model="aboutVisible" title="关于我们" width="400px" center append-to-body>
       <div class="about-content">
-        <p>真题转转是一个专注于大学期末真题分享的平台。</p>
+        <p>转转真题是一个专注于大学期末真题分享的平台。</p>
         <p>我们致力于帮助同学们更高效地复习备考。</p>
         <p class="team-link">
           <el-link type="primary" href="https://whywood.cn" target="_blank">访问团队主页</el-link>
