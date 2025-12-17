@@ -2,15 +2,18 @@
 import { ref, onMounted } from 'vue'
 import request from '../utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, Close, Document } from '@element-plus/icons-vue'
+import { Check, Close, Document, User, Ticket, Edit } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 
 const userStore = useUserStore()
+const activeTab = ref('papers')
+
+// --- 真题审核逻辑 ---
 const pendingPapers = ref<any[]>([])
-const loading = ref(false)
+const papersLoading = ref(false)
 
 const fetchPendingPapers = async () => {
-  loading.value = true
+  papersLoading.value = true
   try {
     const res: any = await request.get('/admin/papers/pending')
     pendingPapers.value = res
@@ -22,7 +25,7 @@ const fetchPendingPapers = async () => {
       ElMessage.error('获取待审核列表失败')
     }
   } finally {
-    loading.value = false
+    papersLoading.value = false
   }
 }
 
@@ -55,8 +58,73 @@ const handlePreview = async (paper: any) => {
         return
     }
     // 使用 API 预览接口
-    const url = `http://localhost:3000/api/papers/${paper.id}/preview?token=${userStore.token}`
+    const url = `/api/papers/${paper.id}/preview?token=${userStore.token}`
     window.open(url, '_blank')
+}
+
+// --- 用户管理逻辑 ---
+const users = ref<any[]>([])
+const usersLoading = ref(false)
+
+const fetchUsers = async () => {
+  usersLoading.value = true
+  try {
+    const res: any = await request.get('/admin/users')
+    users.value = res
+  } catch (error: any) {
+    ElMessage.error('获取用户列表失败')
+  } finally {
+    usersLoading.value = false
+  }
+}
+
+const handleRoleChange = async (user: any) => {
+  const newRole = user.role === 'admin' ? 'user' : 'admin'
+  const actionText = newRole === 'admin' ? '设为管理员' : '取消管理员'
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要将用户 "${user.username}" ${actionText}吗？`,
+      '权限变更',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await request.put(`/admin/users/${user.id}/role`, { role: newRole })
+    ElMessage.success('角色修改成功')
+    fetchUsers()
+  } catch (error) {
+    if (error !== 'cancel') ElMessage.error('操作失败')
+  }
+}
+
+const handleTicketChange = async (user: any) => {
+  try {
+    const { value } = await ElMessageBox.prompt('请输入新的下载券数量', '修改下载券', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputValue: user.download_tickets,
+      inputPattern: /^\d+$/,
+      inputErrorMessage: '请输入非负整数'
+    })
+    
+    await request.put(`/admin/users/${user.id}/tickets`, { tickets: parseInt(value) })
+    ElMessage.success('下载券修改成功')
+    fetchUsers()
+  } catch (error) {
+    if (error !== 'cancel') ElMessage.error('操作失败')
+  }
+}
+
+const handleTabChange = (tab: any) => {
+  if (tab.paneName === 'papers') {
+    fetchPendingPapers()
+  } else if (tab.paneName === 'users') {
+    fetchUsers()
+  }
 }
 
 onMounted(() => {
@@ -67,40 +135,84 @@ onMounted(() => {
 <template>
   <div class="admin-container">
     <div class="page-header">
-      <h2>真题审核后台</h2>
-      <el-button @click="fetchPendingPapers">刷新列表</el-button>
+      <h2>后台管理系统</h2>
     </div>
 
     <el-card class="table-card">
-      <el-table :data="pendingPapers" v-loading="loading" style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="标题" min-width="200" />
-        <el-table-column prop="subject" label="科目" width="120" />
-        <el-table-column prop="year" label="年份" width="100" />
-        <el-table-column prop="uploader_name" label="上传者" width="120" />
-        <el-table-column prop="created_at" label="上传时间" width="180">
-          <template #default="scope">
-            {{ new Date(scope.row.created_at).toLocaleString() }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="250" fixed="right">
-          <template #default="scope">
-            <el-button size="small" @click="handlePreview(scope.row)">
-                <el-icon><Document /></el-icon> 查看
-            </el-button>
-            <el-button type="success" size="small" @click="handleAudit(scope.row, 'approved')">
-              <el-icon><Check /></el-icon> 通过
-            </el-button>
-            <el-button type="danger" size="small" @click="handleAudit(scope.row, 'rejected')">
-              <el-icon><Close /></el-icon> 拒绝
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      
-      <div v-if="pendingPapers.length === 0 && !loading" class="empty-tip">
-        暂无待审核真题
-      </div>
+      <el-tabs v-model="activeTab" @tab-click="handleTabChange">
+        <el-tab-pane label="真题审核" name="papers">
+          <div class="tab-header">
+            <el-button @click="fetchPendingPapers" :icon="Document">刷新列表</el-button>
+          </div>
+          <el-table :data="pendingPapers" v-loading="papersLoading" style="width: 100%">
+            <el-table-column prop="id" label="ID" width="80" />
+            <el-table-column prop="title" label="标题" min-width="200" />
+            <el-table-column prop="subject" label="科目" width="120" />
+            <el-table-column prop="year" label="年份" width="100" />
+            <el-table-column prop="uploader_name" label="上传者" width="120" />
+            <el-table-column prop="created_at" label="上传时间" width="180">
+              <template #default="scope">
+                {{ new Date(scope.row.created_at).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="250" fixed="right">
+              <template #default="scope">
+                <el-button size="small" @click="handlePreview(scope.row)">
+                    <el-icon><Document /></el-icon> 查看
+                </el-button>
+                <el-button type="success" size="small" @click="handleAudit(scope.row, 'approved')">
+                  <el-icon><Check /></el-icon> 通过
+                </el-button>
+                <el-button type="danger" size="small" @click="handleAudit(scope.row, 'rejected')">
+                  <el-icon><Close /></el-icon> 拒绝
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-if="pendingPapers.length === 0 && !papersLoading" class="empty-tip">
+            暂无待审核真题
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="用户管理" name="users">
+          <div class="tab-header">
+            <el-button @click="fetchUsers" :icon="User">刷新列表</el-button>
+          </div>
+          <el-table :data="users" v-loading="usersLoading" style="width: 100%">
+            <el-table-column prop="id" label="ID" width="80" />
+            <el-table-column prop="username" label="用户名" width="150" />
+            <el-table-column prop="email" label="邮箱" min-width="200" />
+            <el-table-column prop="role" label="角色" width="120">
+              <template #default="scope">
+                <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'info'">
+                  {{ scope.row.role === 'admin' ? '管理员' : '普通用户' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="download_tickets" label="下载券" width="120" />
+            <el-table-column prop="created_at" label="注册时间" width="180">
+              <template #default="scope">
+                {{ new Date(scope.row.created_at).toLocaleString() }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="250" fixed="right">
+              <template #default="scope">
+                <el-button 
+                  :type="scope.row.role === 'admin' ? 'warning' : 'primary'" 
+                  size="small" 
+                  @click="handleRoleChange(scope.row)"
+                  :disabled="scope.row.id === userStore.userInfo?.id"
+                >
+                  <el-icon><User /></el-icon> {{ scope.row.role === 'admin' ? '取消管理' : '设为管理' }}
+                </el-button>
+                <el-button type="success" size="small" @click="handleTicketChange(scope.row)">
+                  <el-icon><Ticket /></el-icon> 券
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
@@ -127,5 +239,9 @@ onMounted(() => {
   text-align: center;
   padding: 40px;
   color: #909399;
+}
+
+.tab-header {
+  margin-bottom: 15px;
 }
 </style>

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -57,9 +58,18 @@ app.use('/api', globalLimiter);
 // 为了安全起见，禁用直接静态访问，改为通过 API 访问
 app.use('/uploads', express.static('uploads'));
 
+// 部署：托管前端静态文件
+app.use(express.static(path.join(__dirname, 'public')));
+
 // 根路由
 app.get('/', (req, res) => {
-  res.send('真题转转 API Server is running!');
+  // 如果 public/index.html 存在，express.static 会优先处理
+  // 这里保留作为 API 服务器的提示，或者重定向到前端
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+    if (err) {
+      res.send('真题转转 API Server is running! (Frontend not deployed)');
+    }
+  });
 });
 
 // Socket.io 连接事件
@@ -107,6 +117,14 @@ app.get('/api/db-test', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Database connection failed', details: err.message });
   }
+});
+
+// 处理 SPA 路由 (必须放在所有 API 路由之后)
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 启动服务器

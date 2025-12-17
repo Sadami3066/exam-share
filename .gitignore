@@ -48,6 +48,17 @@ Thumbs.db
 # ==============================
 # 项目特有
 # ==============================
+# 后端上传的文件 (保留目录结构但不上传具体文件)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# 数据库数据 (如果本地有)
+postgres_data/
+
+# 临时文件
+tmp/
+temp/
+
 # 后端上传的文件
 server/uploads/*
 !server/uploads/.gitkeep

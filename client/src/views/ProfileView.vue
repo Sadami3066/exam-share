@@ -131,7 +131,7 @@ onMounted(() => {
           :on-success="handleAvatarSuccess"
         >
           <div v-if="userStore.userInfo.avatar_url" class="avatar-wrapper">
-             <img :src="`http://localhost:3000/${userStore.userInfo.avatar_url}`" class="avatar-img" />
+             <img :src="`/${userStore.userInfo.avatar_url}`" class="avatar-img" />
              <div class="avatar-mask">
                <el-icon><Camera /></el-icon>
              </div>

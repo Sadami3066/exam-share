@@ -76,4 +76,51 @@ router.put('/papers/:id/audit', auth, admin, async (req, res) => {
   }
 });
 
+// 获取所有用户列表
+router.get('/users', auth, admin, async (req, res) => {
+  try {
+    const result = await db.query('SELECT id, username, email, role, download_tickets, created_at FROM users ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '获取用户列表失败' });
+  }
+});
+
+// 修改用户角色
+router.put('/users/:id/role', auth, admin, async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  if (!['user', 'admin'].includes(role)) {
+    return res.status(400).json({ error: '无效的角色' });
+  }
+
+  try {
+    await db.query('UPDATE users SET role = $1 WHERE id = $2', [role, id]);
+    res.json({ message: '角色修改成功' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '修改角色失败' });
+  }
+});
+
+// 修改用户下载券
+router.put('/users/:id/tickets', auth, admin, async (req, res) => {
+  const { id } = req.params;
+  const { tickets } = req.body;
+
+  if (typeof tickets !== 'number' || tickets < 0) {
+    return res.status(400).json({ error: '无效的下载券数量' });
+  }
+
+  try {
+    await db.query('UPDATE users SET download_tickets = $1 WHERE id = $2', [tickets, id]);
+    res.json({ message: '下载券修改成功' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '修改下载券失败' });
+  }
+});
+
 module.exports = router;

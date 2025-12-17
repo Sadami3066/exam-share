@@ -59,8 +59,8 @@ const getFileFormat = (path: string) => {
 // 获取图片预览链接
 const getPreviewUrl = (paper: any) => {
   if (!userStore.token) return ''
-  // 注意：这里硬编码了后端地址，生产环境应从环境变量获取
-  return `http://localhost:3000/api/papers/${paper.id}/preview?token=${userStore.token}`
+  // 使用相对路径，生产环境自动适配
+  return `/api/papers/${paper.id}/preview?token=${userStore.token}`
 }
 
 // 管理员下架真题
@@ -196,7 +196,7 @@ const handlePreview = async (paper: any) => {
   try {
     // 使用直接链接进行预览，利用浏览器的原生 PDF/图片 渲染能力
     // 同时也避免了 Blob 大文件下载导致的内存问题
-    const url = `http://localhost:3000/api/papers/${paper.id}/preview?token=${userStore.token}`
+    const url = `/api/papers/${paper.id}/preview?token=${userStore.token}`
     
     previewUrl.value = url
     previewType.value = isPdf ? 'pdf' : 'image'
@@ -376,7 +376,7 @@ const openUploadModal = () => {
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-content">
-        <h1 class="hero-title">真题转转</h1>
+        <h1 class="hero-title">转转真题</h1>
         <p class="hero-subtitle">让每一份真题都发挥价值，期末复习不再迷茫</p>
         
         <div class="search-box">
@@ -531,7 +531,7 @@ const openUploadModal = () => {
             </div>
             <div class="paper-footer">
               <div class="uploader-info">
-                <el-avatar v-if="paper.uploader_avatar" :size="24" :src="`http://localhost:3000/${paper.uploader_avatar}`" class="uploader-avatar" />
+                <el-avatar v-if="paper.uploader_avatar" :size="24" :src="`/${paper.uploader_avatar}`" class="uploader-avatar" />
                 <el-avatar v-else :size="24" class="uploader-avatar">{{ paper.uploader_name?.charAt(0).toUpperCase() }}</el-avatar>
                 <span class="uploader-name">{{ paper.uploader_name }}</span>
               </div>
