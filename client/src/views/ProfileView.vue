@@ -339,63 +339,43 @@ onMounted(() => {
   font-weight: bold;
 }
 
-/* Mobile adjustments: make header stack, reduce stats size and fix role alignment */
-@media (max-width: 480px) {
-  .profile-container {
-    margin: 40px auto 20px;
-    padding: 0 12px;
-  }
+.records-section {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  min-height: 500px;
+}
 
-  .profile-header {
-    padding: 16px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+.list-container {
+  padding: 10px 0;
+}
 
-  .avatar-wrapper, .default-avatar {
-    width: 64px;
-    height: 64px;
-  }
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #f5f7fa;
+  transition: background 0.3s;
+}
 
-  .info h2 {
-    font-size: 18px;
-    margin-bottom: 6px;
-  }
+.record-item:hover {
+  background: #f9fafc;
+}
 
-  .role-badge {
-    font-size: 11px;
-    padding: 3px 8px;
-    margin-top: 0;
-  }
+.record-item:last-child {
+  border-bottom: none;
+}
 
-  /* Make stats card more compact on mobile and align it to the right */
-  .stats-card {
-    padding: 8px 12px;
-    max-width: 150px;
-    align-self: flex-end; /* keep it at the right side when header stacks */
-  }
-
-  .stat-item {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .stat-item .el-icon {
-    font-size: 18px;
-    margin-bottom: 0;
-  }
-
-  .stat-item .label {
-    font-size: 11px;
-  }
-
-  .stat-item .value {
-    font-size: 16px;
-    font-weight: 700;
-  }
+.item-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  font-size: 24px;
 }
 
 .item-icon.upload {
