@@ -10,6 +10,7 @@ const userStore = useUserStore()
 const searchQuery = ref('')
 const activeSubject = ref('全部')
 const activeTeacher = ref('全部')
+const activeSort = ref('newest') // 排序状态
 const loading = ref(false)
 
 const subjects = ref(['全部'])
@@ -93,7 +94,8 @@ const fetchPapers = async () => {
         limit: pageSize.value,
         subject: activeSubject.value,
         teacher: activeTeacher.value,
-        search: searchQuery.value
+        search: searchQuery.value,
+        sort: activeSort.value
       }
     })
     papers.value = res.papers
@@ -141,7 +143,7 @@ const isPurchased = (paperId: number) => {
   return purchasedPapers.value.has(paperId)
 }
 
-// 监听筛选条件变化
+// 监听筛选条件变化activeSort, 
 watch([activeSubject, activeTeacher, currentPage], () => {
   fetchPapers()
 })
@@ -429,6 +431,11 @@ const openUploadModal = () => {
         </div>
         
         <div class="toolbar-right">
+          <el-radio-group v-model="activeSort" size="large" class="sort-group">
+            <el-radio-button label="newest">最新上传</el-radio-button>
+            <el-radio-button label="popular">最多下载</el-radio-button>
+          </el-radio-group>
+
           <el-select 
             v-model="activeTeacher" 
             placeholder="筛选老师" 

@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS papers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 索引优化 (用于排序和查询)
+CREATE INDEX IF NOT EXISTS idx_papers_created_at ON papers(created_at);
+CREATE INDEX IF NOT EXISTS idx_papers_download_count ON papers(download_count);
+CREATE INDEX IF NOT EXISTS idx_papers_status ON papers(status);
+
 -- 下载记录表 (可选，用于防止重复扣费)
 CREATE TABLE IF NOT EXISTS downloads (
     id SERIAL PRIMARY KEY,

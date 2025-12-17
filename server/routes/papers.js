@@ -33,7 +33,7 @@ const upload = multer({
 
 // 获取真题列表 (支持分页和搜索)
 router.get('/', async (req, res) => {
-  const { page = 1, limit = 10, subject, teacher, search } = req.query;
+  const { page = 1, limit = 10, subject, teacher, search, sort } = req.query;
   const offset = (page - 1) * limit;
 
   try {
@@ -60,6 +60,14 @@ router.get('/', async (req, res) => {
       paramIndex++;
     }
 
+    // 排序逻辑
+    let orderByClause = 'ORDER BY p.created_at DESC'; // 默认按时间倒序
+    if (sort === 'oldest') {
+      orderByClause = 'ORDER BY p.created_at ASC';
+    } else if (sort === 'popular') {
+      orderByClause = 'ORDER BY p.download_count DESC';
+    }
+
     // 1. 获取总数
     const countQuery = `
       SELECT COUNT(*) 
@@ -76,7 +84,7 @@ router.get('/', async (req, res) => {
       FROM papers p
       JOIN users u ON p.uploader_id = u.id
       ${whereClause}
-      ORDER BY p.created_at DESC 
+      ${orderByClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     

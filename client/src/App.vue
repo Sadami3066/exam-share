@@ -124,8 +124,9 @@ onUnmounted(() => {
           <template v-if="userStore.token">
             <el-dropdown trigger="click">
               <div class="user-dropdown-link">
-                <el-avatar v-if="userStore.userInfo.avatar_url" :size="36" :src="`/${userStore.userInfo.avatar_url}`" class="header-avatar" />
-                <el-avatar v-else :size="36" class="header-avatar">{{ userStore.userInfo.username?.charAt(0).toUpperCase() }}</el-avatar>
+                <el-avatar :size="36" :src="userStore.userInfo.avatar_url ? `/${userStore.userInfo.avatar_url}` : ''" class="header-avatar">
+                  {{ userStore.userInfo.username?.charAt(0).toUpperCase() }}
+                </el-avatar>
                 <span class="header-username">{{ userStore.userInfo.username }}</span>
                 <el-icon class="el-icon--right"><CaretBottom /></el-icon>
               </div>
@@ -221,6 +222,17 @@ onUnmounted(() => {
         <p class="version">当前版本: v1.0.0</p>
       </div>
     </el-dialog>
+
+    <!-- 底部 Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p class="copyright">© {{ new Date().getFullYear() }} Exam Share. All rights reserved.</p>
+        <p class="powered-by">
+          Powered by 
+          <a href="https://whywood.cn" target="_blank" class="team-link">DicTecTif侦探事务所</a>
+        </p>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -235,6 +247,34 @@ body {
 .app-layout {
   min-height: 100vh;
   background-color: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-footer {
+  margin-top: auto;
+  padding: 20px 0;
+  text-align: center;
+  background-color: #fff;
+  border-top: 1px solid #ebeef5;
+}
+
+.footer-content {
+  color: #909399;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.footer-content .team-link {
+  color: #409eff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.footer-content .team-link:hover {
+  color: #66b1ff;
+  text-decoration: underline;
 }
 
 .header {
