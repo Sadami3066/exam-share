@@ -30,8 +30,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // 安全防护：Helmet
 // 配置 crossOriginResourcePolicy 允许跨域加载图片 (因为前端在不同端口)
+// 开发环境/纯HTTP环境：禁用 CSP 和 HSTS，防止强制升级 HTTPS 导致资源加载失败
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false,
+  hsts: false
 }));
 
 // 接口限流配置
