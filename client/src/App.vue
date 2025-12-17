@@ -124,7 +124,18 @@ onUnmounted(() => {
           <template v-if="userStore.token">
             <el-dropdown trigger="click">
               <div class="user-dropdown-link">
-                <el-avatar :size="36" :src="userStore.userInfo.avatar_url ? `/${userStore.userInfo.avatar_url}` : ''" class="header-avatar">
+                <el-avatar 
+                  v-if="userStore.userInfo.avatar_url" 
+                  :size="36" 
+                  :src="`/${userStore.userInfo.avatar_url}`" 
+                  :key="userStore.userInfo.avatar_url"
+                  class="header-avatar" 
+                />
+                <el-avatar 
+                  v-else 
+                  :size="36" 
+                  class="header-avatar"
+                >
                   {{ userStore.userInfo.username?.charAt(0).toUpperCase() }}
                 </el-avatar>
                 <span class="header-username">{{ userStore.userInfo.username }}</span>

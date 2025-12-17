@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { Search, Download, Document, Upload, Plus, View, Picture, User, Calendar, Message, Star, InfoFilled, Check, Delete } from '@element-plus/icons-vue'
+import { Search, Download, Document, Upload, Plus, View, Picture, User, Calendar, Message, Star, InfoFilled, Check, Delete, Sort } from '@element-plus/icons-vue'
 import request from '../utils/request'
 import { ElMessage, ElMessageBox, ElNotification, type UploadInstance } from 'element-plus'
 import { useUserStore } from '../stores/user'
@@ -431,10 +431,18 @@ const openUploadModal = () => {
         </div>
         
         <div class="toolbar-right">
-          <el-radio-group v-model="activeSort" size="large" class="sort-group">
-            <el-radio-button label="newest">最新上传</el-radio-button>
-            <el-radio-button label="popular">最多下载</el-radio-button>
-          </el-radio-group>
+          <el-select 
+            v-model="activeSort" 
+            placeholder="排序方式" 
+            size="large" 
+            style="width: 140px; margin-right: 12px;"
+          >
+            <template #prefix>
+              <el-icon><Sort /></el-icon>
+            </template>
+            <el-option label="最新上传" value="newest" />
+            <el-option label="最多下载" value="popular" />
+          </el-select>
 
           <el-select 
             v-model="activeTeacher" 
