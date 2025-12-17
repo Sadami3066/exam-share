@@ -148,12 +148,11 @@ onMounted(() => {
           <div class="role-badge">{{ userStore.userInfo.role === 'admin' ? '管理员' : '普通用户' }}</div>
         </div>
       </div>
-      <!-- 小型下载券徽章（紧凑型，适用于手机） -->
-      <div class="stats-badge" role="status" aria-label="剩余下载券">
-        <div class="badge-icon"><el-icon><Ticket /></el-icon></div>
-        <div class="badge-text">
-          <div class="label">剩余下载券</div>
-          <div class="count">{{ userStore.userInfo.download_tickets || 0 }}</div>
+      <div class="stats-card">
+        <div class="stat-item">
+          <el-icon><Ticket /></el-icon>
+          <span class="label">剩余下载券</span>
+          <span class="value">{{ userStore.userInfo.download_tickets || 0 }}</span>
         </div>
       </div>
     </div>
@@ -310,50 +309,34 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.stats-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #fff;
+.stats-card {
+  background: #fdf6ec;
+  padding: 15px 30px;
   border-radius: 12px;
-  padding: 8px 12px;
-  border: 1px solid #f5e8d6;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-  min-width: 120px;
+  border: 1px solid #faecd8;
 }
 
-.stats-badge .badge-icon {
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   color: #e6a23c;
-  font-size: 20px;
 }
 
-.stats-badge .badge-text .label {
+.stat-item .el-icon {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.stat-item .label {
   font-size: 12px;
-  color: #909399;
-  line-height: 1;
+  opacity: 0.8;
 }
 
-.stats-badge .badge-text .count {
-  font-size: 18px;
-  color: #e6a23c;
-  font-weight: 700;
-  line-height: 1;
-}
-
-/* 手机端更紧凑的样式 */
-@media (max-width: 480px) {
-  .stats-badge {
-    padding: 6px 8px;
-    gap: 8px;
-    min-width: auto;
-    align-self: flex-end;
-  }
-  .stats-badge .badge-icon {
-    font-size: 18px;
-  }
-  .stats-badge .badge-text .count {
-    font-size: 16px;
-  }
+.stat-item .value {
+  font-size: 24px;
+  font-weight: bold;
 }
 
 /* Mobile adjustments: make header stack, reduce stats size and fix role alignment */
@@ -380,21 +363,17 @@ onMounted(() => {
     margin-bottom: 6px;
   }
 
-  .info {
-    display: flex;
-    flex-direction: column;
-  }
-
   .role-badge {
     font-size: 11px;
     padding: 3px 8px;
     margin-top: 0;
   }
 
+  /* Make stats card more compact on mobile and align it to the right */
   .stats-card {
-    padding: 10px 16px;
-    width: 100%;
-    align-self: stretch;
+    padding: 8px 12px;
+    max-width: 150px;
+    align-self: flex-end; /* keep it at the right side when header stacks */
   }
 
   .stat-item {
@@ -405,16 +384,17 @@ onMounted(() => {
   }
 
   .stat-item .el-icon {
-    font-size: 20px;
+    font-size: 18px;
     margin-bottom: 0;
   }
 
   .stat-item .label {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .stat-item .value {
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 700;
   }
 }
 
