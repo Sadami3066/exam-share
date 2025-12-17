@@ -309,7 +309,7 @@ onMounted(() => {
   font-size: 12px;
 }
 
-..stats-card {
+.stats-card {
   background: #fdf6ec;
   padding: 10px 16px;
   border-radius: 12px;
