@@ -6,13 +6,15 @@
 -- 用户表
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    account VARCHAR(50) UNIQUE NOT NULL, -- 登录账号
+    account VARCHAR(50) UNIQUE NOT NULL, -- 登录账号（唯一且必填）
     username VARCHAR(50) NOT NULL,       -- 用户昵称
     password_hash VARCHAR(255) NOT NULL,
     email VARCHAR(100) UNIQUE,           -- 绑定邮箱
     avatar_url VARCHAR(255),             -- 头像路径
     role VARCHAR(20) DEFAULT 'user',     -- 'user' or 'admin'
     download_tickets INTEGER DEFAULT 0,  -- 下载券数量
+    last_check_in DATE,                  -- 最近签到日期
+    is_sponsor BOOLEAN DEFAULT FALSE,    -- 是否为赞助者
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
