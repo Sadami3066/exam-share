@@ -148,11 +148,12 @@ onMounted(() => {
           <div class="role-badge">{{ userStore.userInfo.role === 'admin' ? '管理员' : '普通用户' }}</div>
         </div>
       </div>
-      <div class="stats-card">
-        <div class="stat-item">
-          <el-icon><Ticket /></el-icon>
-          <span class="label">剩余下载券</span>
-          <span class="value">{{ userStore.userInfo.download_tickets || 0 }}</span>
+      <!-- 小型下载券徽章（紧凑型，适用于手机） -->
+      <div class="stats-badge" role="status" aria-label="剩余下载券">
+        <div class="badge-icon"><el-icon><Ticket /></el-icon></div>
+        <div class="badge-text">
+          <div class="label">剩余下载券</div>
+          <div class="count">{{ userStore.userInfo.download_tickets || 0 }}</div>
         </div>
       </div>
     </div>
@@ -309,34 +310,50 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.stats-card {
-  background: #fdf6ec;
-  padding: 15px 30px;
-  border-radius: 12px;
-  border: 1px solid #faecd8;
-}
-
-.stat-item {
+.stats-badge {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid #f5e8d6;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  min-width: 120px;
+}
+
+.stats-badge .badge-icon {
   color: #e6a23c;
+  font-size: 20px;
 }
 
-.stat-item .el-icon {
-  font-size: 24px;
-  margin-bottom: 5px;
-}
-
-.stat-item .label {
+.stats-badge .badge-text .label {
   font-size: 12px;
-  opacity: 0.8;
+  color: #909399;
+  line-height: 1;
 }
 
-.stat-item .value {
-  font-size: 24px;
-  font-weight: bold;
+.stats-badge .badge-text .count {
+  font-size: 18px;
+  color: #e6a23c;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 手机端更紧凑的样式 */
+@media (max-width: 480px) {
+  .stats-badge {
+    padding: 6px 8px;
+    gap: 8px;
+    min-width: auto;
+    align-self: flex-end;
+  }
+  .stats-badge .badge-icon {
+    font-size: 18px;
+  }
+  .stats-badge .badge-text .count {
+    font-size: 16px;
+  }
 }
 
 /* Mobile adjustments: make header stack, reduce stats size and fix role alignment */
