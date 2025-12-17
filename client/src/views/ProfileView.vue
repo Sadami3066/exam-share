@@ -417,7 +417,6 @@ onMounted(() => {
     font-size: 18px;
   }
 }
-}
 
 .item-icon.upload {
   background: #ecf5ff;
