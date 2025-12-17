@@ -464,9 +464,9 @@ const openUploadModal = () => {
       </div>
 
       <!-- 真题列表 -->
-      <div class="paper-grid">
+      <div class="paper-grid" v-loading="loading && papers.length > 0">
         <!-- 骨架屏 Loading -->
-        <template v-if="loading">
+        <template v-if="loading && papers.length === 0">
           <el-card v-for="i in 8" :key="i" class="paper-card skeleton-card">
             <el-skeleton animated>
               <template #template>
@@ -485,12 +485,13 @@ const openUploadModal = () => {
         </template>
 
         <!-- 空状态 -->
-        <div v-else-if="papers.length === 0" class="empty-state">
+        <div v-else-if="!loading && papers.length === 0" class="empty-state">
           <el-empty description="暂无真题，快来上传第一份吧！" />
         </div>
 
         <!-- 真实数据 -->
-        <div v-else v-for="paper in papers" :key="paper.id" class="paper-card">
+        <template v-else>
+        <div v-for="paper in papers" :key="paper.id" class="paper-card">
           <!-- 管理员下架按钮 -->
           <el-button 
             v-if="userStore.userInfo?.role === 'admin'" 
@@ -572,6 +573,7 @@ const openUploadModal = () => {
               <el-icon><Download /></el-icon> 下载
             </el-button>
           </div>
+        </template>
         </div>
       </div>
       
