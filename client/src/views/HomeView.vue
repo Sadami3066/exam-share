@@ -555,11 +555,10 @@ const openUploadModal = () => {
               <span class="tag subject-tag">{{ paper.subject }}</span>
               <span class="tag teacher-tag" v-if="paper.teacher">{{ paper.teacher }}</span>
               <span class="tag year-tag">{{ paper.year }}年</span>
-              <span class="info-item">{{ formatDate(paper.created_at) }}</span>
-              <span class="info-item format-tag">{{ getFileFormat(paper.file_path) }}</span>
             </div>
             <div class="paper-info">
-
+              <span class="info-item">{{ formatDate(paper.created_at) }}</span>
+              <span class="info-item format-tag">{{ getFileFormat(paper.file_path) }}</span>
             </div>
             <div class="paper-footer">
               <div class="uploader-info">
