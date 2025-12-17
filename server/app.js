@@ -120,7 +120,8 @@ app.get('/api/db-test', async (req, res) => {
 });
 
 // 处理 SPA 路由 (必须放在所有 API 路由之后)
-app.get('*', (req, res) => {
+// Express 5.x / path-to-regexp 0.1.7+ 语法变更：通配符需要使用 (.*)
+app.get(/(.*)/, (req, res) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return res.status(404).json({ error: 'Not Found' });
   }
