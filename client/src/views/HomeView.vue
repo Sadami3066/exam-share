@@ -27,9 +27,9 @@ const isCheckedIn = computed(() => {
 
 const heroAds = [
   '你的真题，我来转转！',
-  '上传真题通过审核可获得下载券',
-  '赞助者无限下载，感谢支持',
-  '按课程/老师筛选，快速找到需要的真题'
+  '找真题，上真题转转！',
+  '通过签到、上传真题可获得下载次数',
+  '特别鸣谢：975137922中山大学互助群的题库支持'
 ]
 const heroAdIndex = ref(0)
 const heroTypedText = ref('')
