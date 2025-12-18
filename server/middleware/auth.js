@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_it_in_production';
+const db = require('../db');
 
-module.exports = function(req, res, next) {
+module.exports = async function(req, res, next) {
   // 获取 token
   let token = null;
   
@@ -21,7 +22,19 @@ module.exports = function(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // 将用户信息存入 req.user
+
+    const userResult = await db.query('SELECT id, username, role FROM users WHERE id = $1', [decoded.id]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ error: '用户不存在或已被删除' });
+    }
+
+    const dbUser = userResult.rows[0];
+    req.user = {
+      ...decoded,
+      id: dbUser.id,
+      username: dbUser.username,
+      role: dbUser.role
+    };
     next();
   } catch (err) {
     res.status(401).json({ error: 'Token 无效或已过期' });
