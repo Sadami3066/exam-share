@@ -454,7 +454,7 @@ const openUploadModal = () => {
             v-model="activeSort" 
             placeholder="排序方式" 
             size="large" 
-            style="width: 140px; margin-right: 12px;"
+            class="sort-select"
           >
             <template #prefix>
               <el-icon><Sort /></el-icon>
@@ -742,8 +742,8 @@ const openUploadModal = () => {
       class="preview-dialog"
     >
       <div class="preview-content">
-        <iframe v-if="previewType === 'pdf'" :src="previewUrl" width="100%" height="600px" frameborder="0"></iframe>
-        <img v-else-if="previewType === 'image'" :src="previewUrl" alt="预览图片" style="max-width: 100%; max-height: 600px; display: block; margin: 0 auto;">
+        <iframe v-if="previewType === 'pdf'" :src="previewUrl" style="width: 100%; height: 60vh;" frameborder="0"></iframe>
+        <img v-else-if="previewType === 'image'" :src="previewUrl" alt="预览图片" style="max-width: 100%; max-height: 60vh; display: block; margin: 0 auto;">
         <div v-else class="preview-placeholder">暂不支持该格式预览</div>
       </div>
     </el-dialog>
@@ -903,7 +903,7 @@ const openUploadModal = () => {
 }
 
 .hero-title {
-  font-size: 3rem;
+  font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 800;
   margin-bottom: 1rem;
   letter-spacing: 2px;
@@ -911,7 +911,7 @@ const openUploadModal = () => {
 }
 
 .hero-subtitle {
-  font-size: 1.2rem;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
   margin-bottom: 2.5rem;
   opacity: 0.9;
   font-weight: 300;
@@ -981,6 +981,7 @@ const openUploadModal = () => {
   align-items: center;
   gap: 15px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .category-tabs {
@@ -1017,6 +1018,10 @@ const openUploadModal = () => {
 
 .teacher-select {
   width: 160px;
+}
+
+.sort-select {
+  width: 140px;
 }
 
 .upload-btn {
@@ -1339,17 +1344,20 @@ const openUploadModal = () => {
 
   .toolbar-right {
     display: flex;
+    flex-wrap: wrap;
+    width: 100%;
     gap: 10px;
   }
 
-  .teacher-select {
-    flex: 1;
-    width: auto;
+  .sort-select,
+  .teacher-select,
+  .upload-btn {
+    flex: 1 1 100%;
+    width: 100%;
   }
   
   .upload-btn {
     height: 40px;
-    padding: 0 20px;
   }
 
   .paper-grid {
@@ -1469,21 +1477,8 @@ const openUploadModal = () => {
 @media (max-width: 480px) {
   /* 更紧凑的移动端对话框：更小宽度、更小内边距与更小字体 */
   .custom-dialog .el-dialog {
-/* 移动端抽屉样式调整 */
-.upload-drawer .el-drawer__body {
-  padding: 10px !important;
-}
-.upload-drawer .el-drawer__footer {
-  padding: 8px 10px !important;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.upload-drawer .el-form-item {
-  margin-bottom: 8px;
-}
-    max-width: 86vw !important; /* 更窄，确保左右留白 */
-    margin: 0 7vw !important; /* 在极小屏上保留足够间距 */
+    max-width: 86vw !important;
+    margin: 0 7vw !important;
   }
   .custom-dialog .el-dialog__header {
     padding: 8px 10px !important;
@@ -1502,6 +1497,19 @@ const openUploadModal = () => {
   }
   .el-input, .el-select, .el-input-number {
     width: 100% !important;
+  }
+
+  .upload-drawer .el-drawer__body {
+    padding: 10px !important;
+  }
+  .upload-drawer .el-drawer__footer {
+    padding: 8px 10px !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .upload-drawer .el-form-item {
+    margin-bottom: 8px;
   }
 }
 </style>
