@@ -29,8 +29,15 @@ const heroAds = [
   '你的真题，我来转转！',
   '找真题，上真题转转！',
   '通过签到、上传真题可获得下载次数',
-  '特别鸣谢：975137922中山大学互助群的题库支持'
+  '特别鸣谢：975137922中山大学互助群的题库支持！'
 ]
+const heroTypeConfig = {
+  typeMs: 70,
+  deleteMs: 40,
+  pauseAfterTypeMs: 1200,
+  pauseAfterDeleteMs: 250,
+  startDelayMs: 200
+}
 const heroAdIndex = ref(0)
 const heroTypedText = ref('')
 const heroIsDeleting = ref(false)
@@ -90,7 +97,7 @@ const getCardPreviewSrc = (paper: any) => {
 }
 
 const heroSubtitleText = computed(() => {
-  return heroReduceMotion.value ? heroAds[heroAdIndex.value] : (heroTypedText.value || heroAds[heroAdIndex.value])
+  return heroReduceMotion.value ? heroAds[heroAdIndex.value] : heroTypedText.value
 })
 
 const startHeroTypewriter = () => {
@@ -98,11 +105,6 @@ const startHeroTypewriter = () => {
     window.clearTimeout(heroTypeTimer)
     heroTypeTimer = undefined
   }
-
-  const typeSpeed = 70
-  const deleteSpeed = 40
-  const pauseAfterType = 1200
-  const pauseAfterDelete = 250
 
   const tick = () => {
     const fullText = heroAds[heroAdIndex.value] || ''
@@ -112,10 +114,10 @@ const startHeroTypewriter = () => {
       heroTypedText.value = fullText.slice(0, current.length + 1)
       if (heroTypedText.value === fullText) {
         heroIsDeleting.value = true
-        heroTypeTimer = window.setTimeout(tick, pauseAfterType)
+        heroTypeTimer = window.setTimeout(tick, heroTypeConfig.pauseAfterTypeMs)
         return
       }
-      heroTypeTimer = window.setTimeout(tick, typeSpeed)
+      heroTypeTimer = window.setTimeout(tick, heroTypeConfig.typeMs)
       return
     }
 
@@ -123,15 +125,15 @@ const startHeroTypewriter = () => {
     if (heroTypedText.value.length === 0) {
       heroIsDeleting.value = false
       heroAdIndex.value = (heroAdIndex.value + 1) % heroAds.length
-      heroTypeTimer = window.setTimeout(tick, pauseAfterDelete)
+      heroTypeTimer = window.setTimeout(tick, heroTypeConfig.pauseAfterDeleteMs)
       return
     }
-    heroTypeTimer = window.setTimeout(tick, deleteSpeed)
+    heroTypeTimer = window.setTimeout(tick, heroTypeConfig.deleteMs)
   }
 
   heroTypedText.value = ''
   heroIsDeleting.value = false
-  heroTypeTimer = window.setTimeout(tick, 300)
+  heroTypeTimer = window.setTimeout(tick, heroTypeConfig.startDelayMs)
 }
 
 // 管理员下架真题
