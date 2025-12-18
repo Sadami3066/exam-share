@@ -771,14 +771,15 @@ const openUploadModal = () => {
 
 .purchased-badge {
   position: absolute;
-  top: 14px;
-  left: -40px;
+  top: 10px;
+  left: -32px;
   z-index: 2;
+  width: 100px;
   transform: rotate(-45deg);
-  transform-origin: left top;
   background: #67c23a;
-  padding: 4px 60px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 2px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  text-align: center;
 }
 
 .purchased-text {
@@ -1058,7 +1059,7 @@ const openUploadModal = () => {
   border: 1px solid #ebeef5;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .paper-card:hover {
