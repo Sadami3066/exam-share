@@ -225,7 +225,7 @@ onMounted(() => {
   border-radius: 16px;
   padding: 30px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   margin-bottom: 30px;
@@ -310,7 +310,6 @@ onMounted(() => {
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  min-height: 500px;
 }
 
 .list-container {
@@ -377,5 +376,37 @@ onMounted(() => {
 
 .item-status {
   margin-left: 20px;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    margin: 80px auto 20px;
+    padding: 0 12px;
+  }
+
+  .profile-header {
+    padding: 20px;
+  }
+
+  .avatar-section {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .info h2 {
+    font-size: 20px;
+  }
+
+  .records-section {
+    padding: 16px;
+  }
+
+  .record-item {
+    padding: 16px 10px;
+  }
+
+  .item-status {
+    margin-left: 12px;
+  }
 }
 </style>

@@ -144,31 +144,33 @@ onMounted(() => {
           <div class="tab-header">
             <el-button @click="fetchPendingPapers" :icon="Document">刷新列表</el-button>
           </div>
-          <el-table :data="pendingPapers" v-loading="papersLoading" style="width: 100%">
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column prop="title" label="标题" min-width="200" />
-            <el-table-column prop="subject" label="科目" width="120" />
-            <el-table-column prop="year" label="年份" width="100" />
-            <el-table-column prop="uploader_name" label="上传者" width="120" />
-            <el-table-column prop="created_at" label="上传时间" width="180">
-              <template #default="scope">
-                {{ new Date(scope.row.created_at).toLocaleString() }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
-              <template #default="scope">
-                <el-button size="small" @click="handlePreview(scope.row)">
-                    <el-icon><Document /></el-icon> 查看
-                </el-button>
-                <el-button type="success" size="small" @click="handleAudit(scope.row, 'approved')">
-                  <el-icon><Check /></el-icon> 通过
-                </el-button>
-                <el-button type="danger" size="small" @click="handleAudit(scope.row, 'rejected')">
-                  <el-icon><Close /></el-icon> 拒绝
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <div class="table-wrapper">
+            <el-table :data="pendingPapers" v-loading="papersLoading" class="responsive-table">
+              <el-table-column prop="id" label="ID" width="80" />
+              <el-table-column prop="title" label="标题" min-width="200" />
+              <el-table-column prop="subject" label="科目" width="120" />
+              <el-table-column prop="year" label="年份" width="100" />
+              <el-table-column prop="uploader_name" label="上传者" width="120" />
+              <el-table-column prop="created_at" label="上传时间" width="180">
+                <template #default="scope">
+                  {{ new Date(scope.row.created_at).toLocaleString() }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="250" fixed="right">
+                <template #default="scope">
+                  <el-button size="small" @click="handlePreview(scope.row)">
+                      <el-icon><Document /></el-icon> 查看
+                  </el-button>
+                  <el-button type="success" size="small" @click="handleAudit(scope.row, 'approved')">
+                    <el-icon><Check /></el-icon> 通过
+                  </el-button>
+                  <el-button type="danger" size="small" @click="handleAudit(scope.row, 'rejected')">
+                    <el-icon><Close /></el-icon> 拒绝
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
           <div v-if="pendingPapers.length === 0 && !papersLoading" class="empty-tip">
             暂无待审核真题
           </div>
@@ -178,39 +180,41 @@ onMounted(() => {
           <div class="tab-header">
             <el-button @click="fetchUsers" :icon="User">刷新列表</el-button>
           </div>
-          <el-table :data="users" v-loading="usersLoading" style="width: 100%">
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column prop="username" label="用户名" width="150" />
-            <el-table-column prop="email" label="邮箱" min-width="200" />
-            <el-table-column prop="role" label="角色" width="120">
-              <template #default="scope">
-                <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'info'">
-                  {{ scope.row.role === 'admin' ? '管理员' : '普通用户' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="download_tickets" label="下载券" width="120" />
-            <el-table-column prop="created_at" label="注册时间" width="180">
-              <template #default="scope">
-                {{ new Date(scope.row.created_at).toLocaleString() }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
-              <template #default="scope">
-                <el-button 
-                  :type="scope.row.role === 'admin' ? 'warning' : 'primary'" 
-                  size="small" 
-                  @click="handleRoleChange(scope.row)"
-                  :disabled="scope.row.id === userStore.userInfo?.id"
-                >
-                  <el-icon><User /></el-icon> {{ scope.row.role === 'admin' ? '取消管理' : '设为管理' }}
-                </el-button>
-                <el-button type="success" size="small" @click="handleTicketChange(scope.row)">
-                  <el-icon><Ticket /></el-icon> 券
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <div class="table-wrapper">
+            <el-table :data="users" v-loading="usersLoading" class="responsive-table">
+              <el-table-column prop="id" label="ID" width="80" />
+              <el-table-column prop="username" label="用户名" width="150" />
+              <el-table-column prop="email" label="邮箱" min-width="200" />
+              <el-table-column prop="role" label="角色" width="120">
+                <template #default="scope">
+                  <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'info'">
+                    {{ scope.row.role === 'admin' ? '管理员' : '普通用户' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="download_tickets" label="下载券" width="120" />
+              <el-table-column prop="created_at" label="注册时间" width="180">
+                <template #default="scope">
+                  {{ new Date(scope.row.created_at).toLocaleString() }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="250" fixed="right">
+                <template #default="scope">
+                  <el-button 
+                    :type="scope.row.role === 'admin' ? 'warning' : 'primary'" 
+                    size="small" 
+                    @click="handleRoleChange(scope.row)"
+                    :disabled="scope.row.id === userStore.userInfo?.id"
+                  >
+                    <el-icon><User /></el-icon> {{ scope.row.role === 'admin' ? '取消管理' : '设为管理' }}
+                  </el-button>
+                  <el-button type="success" size="small" @click="handleTicketChange(scope.row)">
+                    <el-icon><Ticket /></el-icon> 券
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -235,6 +239,15 @@ onMounted(() => {
   border-radius: 8px;
 }
 
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.responsive-table {
+  min-width: 700px;
+}
+
 .empty-tip {
   text-align: center;
   padding: 40px;
@@ -243,5 +256,29 @@ onMounted(() => {
 
 .tab-header {
   margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    margin: 80px auto 20px;
+    padding: 0 12px;
+  }
+
+  .page-header h2 {
+    font-size: 20px;
+  }
+
+  .table-card {
+    border-radius: 12px;
+  }
+
+  .tab-header {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .responsive-table {
+    font-size: 12px;
+  }
 }
 </style>
