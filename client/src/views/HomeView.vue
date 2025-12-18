@@ -783,9 +783,9 @@ const openUploadModal = () => {
 
 .purchased-text {
   color: #fff;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-align: center;
   display: inline-block;
 }
