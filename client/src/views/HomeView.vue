@@ -146,8 +146,8 @@ const isPurchased = (paperId: number) => {
   return purchasedPapers.value.has(paperId)
 }
 
-// 监听筛选条件变化activeSort, 
-watch([activeSubject, activeTeacher, currentPage], () => {
+// 监听筛选条件变化
+watch([activeSubject, activeTeacher, currentPage, activeSort], () => {
   fetchPapers()
 })
 
@@ -524,7 +524,12 @@ const openUploadModal = () => {
           />
 
           <!-- 情况1：是图片 -> 显示缩略图 -->
-          <div class="card-preview" v-if="isImage(paper.file_path)" @click.stop="handlePreview(paper)" style="cursor: pointer;">
+          <div
+            class="card-preview"
+            v-if="isImage(paper.file_path)"
+            @click.stop="!isMobile && handlePreview(paper)"
+            :style="{ cursor: isMobile ? 'default' : 'pointer' }"
+          >
             <el-image 
               :src="getPreviewUrl(paper)" 
               fit="cover" 
@@ -545,8 +550,7 @@ const openUploadModal = () => {
           
           <!-- 已购买/赞助 标记 -->
           <div class="purchased-badge" v-if="isPurchased(paper.id) || isSponsor">
-            <el-icon><Check /></el-icon>
-            <span>{{ isSponsor ? '免费' : '已购' }}</span>
+            <span class="purchased-text">{{ isSponsor ? '免费' : '已购' }}</span>
           </div>
 
           <div class="card-content">
@@ -561,16 +565,18 @@ const openUploadModal = () => {
               <span class="info-item format-tag">{{ getFileFormat(paper.file_path) }}</span>
             </div>
             <div class="paper-footer">
-              <div class="uploader-info">
-                <el-avatar v-if="paper.uploader_avatar" :size="24" :src="`/${paper.uploader_avatar}`" class="uploader-avatar" />
-                <el-avatar v-else :size="24" class="uploader-avatar">{{ paper.uploader_name?.charAt(0).toUpperCase() }}</el-avatar>
-                <span class="uploader-name">{{ paper.uploader_name }}</span>
-              </div>
-              <div class="footer-right">
+              <div class="uploader-and-downloads">
+                <div class="uploader-info">
+                  <el-avatar v-if="paper.uploader_avatar" :size="24" :src="`/${paper.uploader_avatar}`" class="uploader-avatar" />
+                  <el-avatar v-else :size="24" class="uploader-avatar">{{ paper.uploader_name?.charAt(0).toUpperCase() }}</el-avatar>
+                  <span class="uploader-name">{{ paper.uploader_name }}</span>
+                </div>
                 <div class="downloads-info" title="下载次数">
                   <el-icon><Download /></el-icon>
                   <span>{{ paper.download_count }}</span>
                 </div>
+              </div>
+              <div class="footer-right">
                 <el-button 
                   class="mobile-download-btn" 
                   type="primary" 
@@ -765,18 +771,23 @@ const openUploadModal = () => {
 
 .purchased-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(103, 194, 58, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  top: 14px;
+  left: -40px;
   z-index: 2;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transform: rotate(-45deg);
+  transform-origin: left top;
+  background: #67c23a;
+  padding: 4px 60px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.purchased-text {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-align: center;
+  display: inline-block;
 }
 
 .sponsor-content {
@@ -1215,10 +1226,16 @@ const openUploadModal = () => {
   font-weight: 500;
 }
 
-.footer-right {
+.uploader-and-downloads {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .downloads-info {
@@ -1413,25 +1430,16 @@ const openUploadModal = () => {
   }
   
   .paper-footer {
-    display: none; /* 手机端简化显示，隐藏底部栏，因为信息已在上方展示 */
-  }
-  
-  .card-hover-overlay {
-    display: none; /* 手机端禁用悬停遮罩 */
-  }
-  
-  /* 手机端点击卡片直接预览/下载，或者添加一个显式的操作按钮 */
-  /* 这里我们让整个卡片可点击，或者保留之前的 mobile-download-btn */
-  /* 但之前的 mobile-download-btn 在 footer 里，现在 footer 隐藏了 */
-  /* 让我们恢复 footer 但简化它 */
-  
-  .paper-footer {
     display: flex;
     margin-top: 6px;
     padding-top: 0;
     border-top: none;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .card-hover-overlay {
+    display: none; /* 手机端禁用悬停遮罩 */
   }
 
   .uploader {
