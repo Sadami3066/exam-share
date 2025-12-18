@@ -1137,15 +1137,18 @@ const openUploadModal = () => {
 
 .paper-meta {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 4px;
+  margin-bottom: 6px;
 }
 
 .paper-info {
   display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-size: 0.75rem;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
   color: #909399;
 }
 
@@ -1156,16 +1159,17 @@ const openUploadModal = () => {
 
 .format-tag {
   background: #f0f2f5;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 500;
   color: #606266;
 }
 
 .tag {
-  font-size: 0.8rem;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  line-height: 1.2;
 }
 
 .subject-tag {
