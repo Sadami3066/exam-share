@@ -60,27 +60,37 @@ const fileExists = async (p) => {
 };
 
 const generatePdfThumbnail = async (absolutePdfPath, absoluteJpgPath) => {
+  if (!(await fileExists(absolutePdfPath))) {
+    return { ok: false, reason: 'pdf_missing', detail: absolutePdfPath };
+  }
+
   const outDir = path.dirname(absoluteJpgPath);
   await fs.promises.mkdir(outDir, { recursive: true });
 
   const baseWithoutExt = absoluteJpgPath.replace(/\.jpg$/i, '');
-  const pdftoppmResult = await runCommand(
-    'pdftoppm',
-    ['-f', '1', '-l', '1', '-jpeg', '-scale-to', '600', absolutePdfPath, baseWithoutExt],
-    {},
-    20000
-  );
-  if (pdftoppmResult.ok) {
-    const produced = `${baseWithoutExt}-1.jpg`;
-    if (await fileExists(produced)) {
-      if (produced !== absoluteJpgPath) {
-        try {
-          await fs.promises.rename(produced, absoluteJpgPath);
-        } catch (_) {
-          await fs.promises.copyFile(produced, absoluteJpgPath);
+  const pdftoppmCommands = ['pdftoppm', '/usr/bin/pdftoppm'];
+  for (const cmd of pdftoppmCommands) {
+    const pdftoppmResult = await runCommand(
+      cmd,
+      ['-f', '1', '-l', '1', '-jpeg', '-scale-to', '600', '-singlefile', absolutePdfPath, baseWithoutExt],
+      {},
+      20000
+    );
+    if (pdftoppmResult.ok) {
+      const candidates = [`${baseWithoutExt}.jpg`, `${baseWithoutExt}-1.jpg`, `${baseWithoutExt}-01.jpg`, `${baseWithoutExt}-001.jpg`];
+      for (const produced of candidates) {
+        if (await fileExists(produced)) {
+          if (produced !== absoluteJpgPath) {
+            try {
+              await fs.promises.rename(produced, absoluteJpgPath);
+            } catch (_) {
+              await fs.promises.copyFile(produced, absoluteJpgPath);
+            }
+          }
+          if (await fileExists(absoluteJpgPath)) return { ok: true, tool: 'pdftoppm' };
+          break;
         }
       }
-      return await fileExists(absoluteJpgPath);
     }
   }
 
@@ -90,7 +100,7 @@ const generatePdfThumbnail = async (absolutePdfPath, absoluteJpgPath) => {
     {},
     20000
   );
-  if (mutoolResult.ok && (await fileExists(absoluteJpgPath))) return true;
+  if (mutoolResult.ok && (await fileExists(absoluteJpgPath))) return { ok: true, tool: 'mutool' };
 
   const magickResult = await runCommand(
     'magick',
@@ -98,9 +108,10 @@ const generatePdfThumbnail = async (absolutePdfPath, absoluteJpgPath) => {
     {},
     20000
   );
-  if (magickResult.ok && (await fileExists(absoluteJpgPath))) return true;
+  if (magickResult.ok && (await fileExists(absoluteJpgPath))) return { ok: true, tool: 'magick' };
 
-  return false;
+  const detail = [mutoolResult.stderr, magickResult.stderr].filter(Boolean).join('\n');
+  return { ok: false, reason: 'convert_failed', detail };
 };
 
 // 获取待审核真题数量
@@ -268,15 +279,20 @@ router.post('/papers/thumbnails/rebuild', auth, admin, async (req, res) => {
       const thumbnailAbsPath = path.resolve(thumbnailRelPath);
       const pdfAbsPath = path.resolve(filePath);
 
-      const ok = await generatePdfThumbnail(pdfAbsPath, thumbnailAbsPath);
-      if (ok) {
+      const thumbnailResult = await generatePdfThumbnail(pdfAbsPath, thumbnailAbsPath);
+      if (thumbnailResult.ok) {
         generated++;
         await db.query('UPDATE papers SET thumbnail_path = $1 WHERE id = $2', [
           thumbnailRelPath,
           paper.id
         ]);
       } else {
-        failed.push({ id: paper.id });
+        failed.push({
+          id: paper.id,
+          reason: thumbnailResult.reason,
+          file_path: filePath,
+          detail: thumbnailResult.detail
+        });
       }
     }
 
