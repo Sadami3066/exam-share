@@ -67,6 +67,16 @@ const getPreviewUrl = (paper: any) => {
   return url
 }
 
+const hasCardPreview = (paper: any) => {
+  return isImage(paper.file_path) || !!paper.thumbnail_path
+}
+
+const getCardPreviewSrc = (paper: any) => {
+  if (isImage(paper.file_path)) return getPreviewUrl(paper)
+  if (paper.thumbnail_path) return `/${paper.thumbnail_path}`
+  return ''
+}
+
 // 管理员下架真题
 const handleTakeDown = async (paper: any) => {
   try {
@@ -398,7 +408,7 @@ const openUploadModal = () => {
     <section class="hero-section">
       <div class="hero-content">
         <h1 class="hero-title">转转真题</h1>
-        <p class="hero-subtitle">让每一份真题都发挥价值，期末复习不再迷茫</p>
+        <p class="hero-subtitle">你的真题，我来转转！</p>
         
         <div class="search-box">
           <el-input
@@ -526,12 +536,12 @@ const openUploadModal = () => {
           <!-- 情况1：是图片 -> 显示缩略图 -->
           <div
             class="card-preview"
-            v-if="isImage(paper.file_path)"
+            v-if="hasCardPreview(paper)"
             @click.stop="!isMobile && handlePreview(paper)"
             :style="{ cursor: isMobile ? 'default' : 'pointer' }"
           >
             <el-image 
-              :src="getPreviewUrl(paper)" 
+              :src="getCardPreviewSrc(paper)" 
               fit="cover" 
               class="paper-thumbnail"
               loading="lazy"

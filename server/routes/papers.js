@@ -4,6 +4,104 @@ const db = require('../db');
 const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
+const fs = require('fs');
+const { spawn } = require('child_process');
+
+const isPdf = (filePath) => /\.pdf$/i.test(filePath || '');
+
+const runCommand = (command, args, options = {}, timeoutMs = 15000) => {
+  return new Promise((resolve) => {
+    let stdout = '';
+    let stderr = '';
+    let finished = false;
+
+    const child = spawn(command, args, { ...options, windowsHide: true });
+
+    const timer = setTimeout(() => {
+      if (!finished) {
+        finished = true;
+        try {
+          child.kill('SIGKILL');
+        } catch (_) {}
+        resolve({ ok: false, code: null, stdout, stderr: `${stderr}\nTIMEOUT` });
+      }
+    }, timeoutMs);
+
+    child.stdout?.on('data', (d) => {
+      stdout += d.toString();
+    });
+    child.stderr?.on('data', (d) => {
+      stderr += d.toString();
+    });
+
+    child.on('error', (err) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      resolve({ ok: false, code: null, stdout, stderr: `${stderr}\n${err.message}` });
+    });
+
+    child.on('close', (code) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      resolve({ ok: code === 0, code, stdout, stderr });
+    });
+  });
+};
+
+const fileExists = async (p) => {
+  try {
+    const st = await fs.promises.stat(p);
+    return st.isFile() && st.size > 0;
+  } catch (_) {
+    return false;
+  }
+};
+
+const generatePdfThumbnail = async (absolutePdfPath, absoluteJpgPath) => {
+  const outDir = path.dirname(absoluteJpgPath);
+  await fs.promises.mkdir(outDir, { recursive: true });
+
+  const baseWithoutExt = absoluteJpgPath.replace(/\.jpg$/i, '');
+  const pdftoppmResult = await runCommand(
+    'pdftoppm',
+    ['-f', '1', '-l', '1', '-jpeg', '-scale-to', '600', absolutePdfPath, baseWithoutExt],
+    {},
+    20000
+  );
+  if (pdftoppmResult.ok) {
+    const produced = `${baseWithoutExt}-1.jpg`;
+    if (await fileExists(produced)) {
+      if (produced !== absoluteJpgPath) {
+        try {
+          await fs.promises.rename(produced, absoluteJpgPath);
+        } catch (_) {
+          await fs.promises.copyFile(produced, absoluteJpgPath);
+        }
+      }
+      return await fileExists(absoluteJpgPath);
+    }
+  }
+
+  const mutoolResult = await runCommand(
+    'mutool',
+    ['draw', '-o', absoluteJpgPath, '-r', '150', absolutePdfPath, '1'],
+    {},
+    20000
+  );
+  if (mutoolResult.ok && (await fileExists(absoluteJpgPath))) return true;
+
+  const magickResult = await runCommand(
+    'magick',
+    ['-density', '150', `${absolutePdfPath}[0]`, '-quality', '80', absoluteJpgPath],
+    {},
+    20000
+  );
+  if (magickResult.ok && (await fileExists(absoluteJpgPath))) return true;
+
+  return false;
+};
 
 // 配置 Multer 文件上传
 const storage = multer.diskStorage({
@@ -147,6 +245,28 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
       [title, subject, year, teacher || null, filePath, userId, status]
     );
 
+    const createdPaper = result.rows[0];
+    if (isPdf(filePath)) {
+      try {
+        const thumbnailRelPath = path
+          .join('uploads', 'thumbnails', `paper-${createdPaper.id}.jpg`)
+          .replace(/\\/g, '/');
+        const thumbnailAbsPath = path.resolve(thumbnailRelPath);
+        const pdfAbsPath = path.resolve(filePath);
+
+        const ok = await generatePdfThumbnail(pdfAbsPath, thumbnailAbsPath);
+        if (ok) {
+          await db.query('UPDATE papers SET thumbnail_path = $1 WHERE id = $2', [
+            thumbnailRelPath,
+            createdPaper.id
+          ]);
+          createdPaper.thumbnail_path = thumbnailRelPath;
+        }
+      } catch (e) {
+        console.error('生成 PDF 缩略图失败', e);
+      }
+    }
+
     // 通知管理员有新待审核真题
     if (req.io) {
         req.io.emit('new_paper_pending'); 
@@ -156,7 +276,7 @@ router.post('/upload', auth, upload.single('file'), async (req, res) => {
     // 修改为：审核通过后才发券，此处不再直接发券
     // await db.query('UPDATE users SET download_tickets = download_tickets + 1 WHERE id = $1', [userId]);
 
-    res.status(201).json({ message: '上传成功，请等待管理员审核', paper: result.rows[0] });
+    res.status(201).json({ message: '上传成功，请等待管理员审核', paper: createdPaper });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: '上传失败，数据库错误' });

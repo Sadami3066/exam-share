@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS papers (
     teacher VARCHAR(50),                 -- 授课老师
     year INTEGER,
     file_path VARCHAR(255) NOT NULL,
+    thumbnail_path VARCHAR(255),         -- PDF/文档首页预览图路径（可为空）
     uploader_id INTEGER REFERENCES users(id),
     status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
     download_count INTEGER DEFAULT 0,
@@ -62,6 +63,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_check_in DATE;
 
 -- 常用备用字段：如果需要也一并补齐 is_sponsor（赞助者标识）
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_sponsor BOOLEAN DEFAULT FALSE;
+
+-- 确保 papers 表包含 thumbnail_path 字段（用于首页卡片预览图）
+ALTER TABLE papers ADD COLUMN IF NOT EXISTS thumbnail_path VARCHAR(255);
 
 -- 确保 account 字段存在并为 NOT NULL（如果你使用 account 登录字段）
 ALTER TABLE users ADD COLUMN IF NOT EXISTS account VARCHAR(50) UNIQUE;
