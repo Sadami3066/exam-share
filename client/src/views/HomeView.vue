@@ -1058,7 +1058,7 @@ const openUploadModal = () => {
   border: 1px solid #ebeef5;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .paper-card:hover {
