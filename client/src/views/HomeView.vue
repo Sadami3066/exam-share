@@ -25,6 +25,18 @@ const isCheckedIn = computed(() => {
   return !!userStore.userInfo?.is_checked_in
 })
 
+const heroAds = [
+  '你的真题，我来转转！',
+  '上传真题通过审核可获得下载券',
+  '赞助者无限下载，感谢支持',
+  '按课程/老师筛选，快速找到需要的真题'
+]
+const heroAdIndex = ref(0)
+const heroTypedText = ref('')
+const heroIsDeleting = ref(false)
+let heroTypeTimer: number | undefined
+const heroReduceMotion = ref(false)
+
 // 真题数据
 const papers = ref<any[]>([])
 const total = ref(0)
@@ -75,6 +87,51 @@ const getCardPreviewSrc = (paper: any) => {
   if (isImage(paper.file_path)) return getPreviewUrl(paper)
   if (paper.thumbnail_path) return `/${paper.thumbnail_path}`
   return ''
+}
+
+const heroSubtitleText = computed(() => {
+  return heroReduceMotion.value ? heroAds[heroAdIndex.value] : (heroTypedText.value || heroAds[heroAdIndex.value])
+})
+
+const startHeroTypewriter = () => {
+  if (heroTypeTimer) {
+    window.clearTimeout(heroTypeTimer)
+    heroTypeTimer = undefined
+  }
+
+  const typeSpeed = 70
+  const deleteSpeed = 40
+  const pauseAfterType = 1200
+  const pauseAfterDelete = 250
+
+  const tick = () => {
+    const fullText = heroAds[heroAdIndex.value] || ''
+    const current = heroTypedText.value
+
+    if (!heroIsDeleting.value) {
+      heroTypedText.value = fullText.slice(0, current.length + 1)
+      if (heroTypedText.value === fullText) {
+        heroIsDeleting.value = true
+        heroTypeTimer = window.setTimeout(tick, pauseAfterType)
+        return
+      }
+      heroTypeTimer = window.setTimeout(tick, typeSpeed)
+      return
+    }
+
+    heroTypedText.value = fullText.slice(0, Math.max(0, current.length - 1))
+    if (heroTypedText.value.length === 0) {
+      heroIsDeleting.value = false
+      heroAdIndex.value = (heroAdIndex.value + 1) % heroAds.length
+      heroTypeTimer = window.setTimeout(tick, pauseAfterDelete)
+      return
+    }
+    heroTypeTimer = window.setTimeout(tick, deleteSpeed)
+  }
+
+  heroTypedText.value = ''
+  heroIsDeleting.value = false
+  heroTypeTimer = window.setTimeout(tick, 300)
 }
 
 // 管理员下架真题
@@ -173,6 +230,10 @@ onMounted(() => {
     fetchPurchasedPapers()
     userStore.fetchUserInfo()
   }
+  heroReduceMotion.value = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
+  if (!heroReduceMotion.value) {
+    startHeroTypewriter()
+  }
   // 移动端检测（把 handler 抽到外层以便后续移除）
   // 见文件顶部的 `handleResize` 定义
   handleResize()
@@ -195,6 +256,10 @@ onUnmounted(() => {
   socket.off('paper_approved')
   socket.off('paper_taken_down')
   window.removeEventListener('resize', handleResize)
+  if (heroTypeTimer) {
+    window.clearTimeout(heroTypeTimer)
+    heroTypeTimer = undefined
+  }
 })
 
 // --- 预览相关逻辑 ---
@@ -408,7 +473,9 @@ const openUploadModal = () => {
     <section class="hero-section">
       <div class="hero-content">
         <h1 class="hero-title">转转真题</h1>
-        <p class="hero-subtitle">你的真题，我来转转！</p>
+        <p class="hero-subtitle">
+          <span class="typewriter-text">{{ heroSubtitleText }}</span><span class="typewriter-cursor" aria-hidden="true">|</span>
+        </p>
         
         <div class="search-box">
           <el-input
@@ -937,6 +1004,30 @@ const openUploadModal = () => {
   margin-bottom: 2.5rem;
   opacity: 0.9;
   font-weight: 300;
+  min-height: 1.6em;
+}
+
+.typewriter-text {
+  white-space: nowrap;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 0.8ch;
+  margin-left: 2px;
+  animation: typewriterBlink 1s steps(2, start) infinite;
+}
+
+@keyframes typewriterBlink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typewriter-cursor {
+    animation: none;
+  }
 }
 
 .search-box {
