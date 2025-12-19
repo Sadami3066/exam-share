@@ -9,6 +9,14 @@
 - **PostgreSQL**: `psql --version`
 - **Git**: `git --version`
 - **PM2** (进程管理): `npm install -g pm2`
+- **poppler-utils** (PDF 缩略图生成，提供 `pdftoppm`)
+- **mupdf-tools** (可选：`pdftoppm` 不可用时的备用缩略图工具 `mutool`)
+
+Ubuntu/Debian 安装示例：
+```bash
+sudo apt-get update
+sudo apt-get install -y poppler-utils mupdf-tools
+```
 
 ## 2. 获取代码
 
@@ -83,6 +91,13 @@ pm2 start app.js --name exam-share
 pm2 save
 pm2 startup
 ```
+
+### 4.3 PDF 预览与缩略图说明
+
+- PDF 在线预览通过接口 `GET /api/papers/:id/preview` 返回文件给浏览器渲染，不需要额外安装 PDF 预览插件。
+- PDF 缩略图会在上传 PDF 时自动生成并写入数据库字段 `papers.thumbnail_path`，文件默认存放在 `server/uploads/thumbnails/` 下，命名形如 `paper-<id>.jpg`。
+- 若历史 PDF 的 `thumbnail_path` 为空，可在管理员后台触发“重建缩略图”，或直接调用接口：
+  - `POST /api/admin/papers/thumbnails/rebuild`（需要管理员 Token）
 
 ## 5. 前端部署 (Client)
 
