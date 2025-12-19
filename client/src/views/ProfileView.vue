@@ -12,6 +12,12 @@ const downloads = ref<any[]>([])
 const loading = ref(false)
 const avatarUploadRef = ref<UploadInstance>()
 
+const editNameVisible = ref(false)
+const nameForm = ref({
+  username: ''
+})
+const nameLoading = ref(false)
+
 const handleAvatarSuccess = (response: any) => {
   userStore.fetchUserInfo()
   ElMessage.success('头像上传成功')
@@ -38,6 +44,35 @@ const customUpload = async (options: any) => {
   } catch (error) {
     options.onError()
     ElMessage.error('头像上传失败')
+  }
+}
+
+const openEditName = () => {
+  nameForm.value.username = userStore.userInfo.username || ''
+  editNameVisible.value = true
+}
+
+const submitName = async () => {
+  const trimmed = String(nameForm.value.username || '').trim()
+  if (!trimmed) {
+    ElMessage.warning('请输入昵称')
+    return
+  }
+  if (trimmed.length < 2 || trimmed.length > 7) {
+    ElMessage.warning('昵称长度需在2-7个字符之间')
+    return
+  }
+
+  nameLoading.value = true
+  try {
+    await request.patch('/user/profile', { username: trimmed })
+    await userStore.fetchUserInfo()
+    editNameVisible.value = false
+    ElMessage.success('昵称已更新')
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.error || '更新失败')
+  } finally {
+    nameLoading.value = false
   }
 }
 
@@ -144,7 +179,10 @@ onMounted(() => {
           </div>
         </el-upload>
         <div class="info">
-          <h2>{{ userStore.userInfo.username }}</h2>
+          <div class="name-row">
+            <h2>{{ userStore.userInfo.username }}</h2>
+            <el-button type="primary" link @click="openEditName">更改昵称</el-button>
+          </div>
           <div class="role-badge">{{ userStore.userInfo.role === 'admin' ? '管理员' : '普通用户' }}</div>
         </div>
       </div>
@@ -210,6 +248,18 @@ onMounted(() => {
         </el-tab-pane>
       </el-tabs>
     </div>
+
+    <el-dialog v-model="editNameVisible" title="更改昵称" width="420px" destroy-on-close>
+      <el-form size="large">
+        <el-form-item>
+          <el-input v-model="nameForm.username" placeholder="请输入新昵称 (2-7个字符)" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editNameVisible = false">取消</el-button>
+        <el-button type="primary" :loading="nameLoading" @click="submitName">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -235,6 +285,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .avatar-uploader {

@@ -128,4 +128,24 @@ router.get('/downloads', auth, async (req, res) => {
   }
 });
 
+router.patch('/profile', auth, async (req, res) => {
+  const { username } = req.body;
+  if (!username) {
+    return res.status(400).json({ error: '请输入昵称' });
+  }
+
+  const trimmed = String(username).trim();
+  if (trimmed.length < 2 || trimmed.length > 7) {
+    return res.status(400).json({ error: '昵称长度需在2-7个字符之间' });
+  }
+
+  try {
+    await db.query('UPDATE users SET username = $1 WHERE id = $2', [trimmed, req.user.id]);
+    res.json({ message: '昵称已更新' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '更新昵称失败' });
+  }
+});
+
 module.exports = router;

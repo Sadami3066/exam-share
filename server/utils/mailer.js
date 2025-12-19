@@ -43,3 +43,30 @@ exports.sendVerificationEmail = async (to, code) => {
     `
   });
 };
+
+exports.sendPasswordResetEmail = async (to, code) => {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('SMTP未配置，无法发送邮件。验证码为:', code);
+    return; 
+  }
+
+  await transporter.sendMail({
+    from: `"转转真题" <${process.env.SMTP_USER}>`,
+    to,
+    subject: '【转转真题】密码找回验证码',
+    text: `您的密码找回验证码是：${code}。有效期5分钟，请勿泄露给他人。`,
+    html: `
+      <div style="padding: 20px; background-color: #f5f7fa; font-family: sans-serif;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+          <h2 style="color: #409eff; margin-top: 0;">转转真题</h2>
+          <p style="font-size: 16px; color: #606266;">亲爱的用户：</p>
+          <p style="font-size: 16px; color: #606266;">您正在进行密码找回操作，验证码是：</p>
+          <div style="background-color: #ecf5ff; color: #409eff; font-size: 24px; font-weight: bold; text-align: center; padding: 15px; border-radius: 6px; margin: 20px 0; letter-spacing: 4px;">
+            ${code}
+          </div>
+          <p style="font-size: 14px; color: #909399;">该验证码 5 分钟内有效。如果不是您本人的操作，请忽略本邮件。</p>
+        </div>
+      </div>
+    `
+  });
+};

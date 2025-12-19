@@ -6,7 +6,7 @@ const db = require('../db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { sendVerificationEmail } = require('../utils/mailer');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_it_in_production';
 
@@ -77,6 +77,85 @@ router.post('/send-code', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: '发送验证码失败' });
+  }
+});
+
+router.post('/send-reset-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: '请输入邮箱' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: '邮箱格式不正确' });
+  }
+
+  try {
+    const emailCheck = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (emailCheck.rows.length === 0) {
+      return res.json({ message: '验证码已发送' });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await db.query(
+      `INSERT INTO email_verifications (email, code, expires_at) 
+       VALUES ($1, $2, $3) 
+       ON CONFLICT (email) 
+       DO UPDATE SET code = $2, expires_at = $3`,
+      [email, code, expiresAt]
+    );
+
+    await sendPasswordResetEmail(email, code);
+    res.json({ message: '验证码已发送' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '发送验证码失败' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ error: '请填写完整信息' });
+  }
+
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({ error: '密码需至少6位，且包含字母和数字' });
+  }
+
+  try {
+    const verifyResult = await db.query('SELECT * FROM email_verifications WHERE email = $1', [email]);
+    if (verifyResult.rows.length === 0) {
+      return res.status(400).json({ error: '验证码错误或已过期' });
+    }
+
+    const verification = verifyResult.rows[0];
+    if (verification.code !== code) {
+      return res.status(400).json({ error: '验证码错误或已过期' });
+    }
+    if (new Date() > new Date(verification.expires_at)) {
+      return res.status(400).json({ error: '验证码错误或已过期' });
+    }
+
+    const userResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({ error: '验证码错误或已过期' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await db.query('UPDATE users SET password_hash = $1 WHERE email = $2', [passwordHash, email]);
+    await db.query('DELETE FROM email_verifications WHERE email = $1', [email]);
+
+    res.json({ message: '密码已重置' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '服务器错误' });
   }
 });
 

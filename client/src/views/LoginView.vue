@@ -31,6 +31,17 @@ const codeLoading = ref(false)
 const codeTimer = ref(0)
 let timerInterval: any = null
 
+const resetVisible = ref(false)
+const resetForm = reactive({
+  email: '',
+  code: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+const resetCodeLoading = ref(false)
+const resetCodeTimer = ref(0)
+let resetTimerInterval: any = null
+
 const handleAvatarChange = (file: any) => {
   const isLt5M = file.size / 1024 / 1024 < 5
   if (!isLt5M) {
@@ -74,7 +85,75 @@ const sendCode = async () => {
 
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
+  if (resetTimerInterval) clearInterval(resetTimerInterval)
 })
+
+const sendResetCode = async () => {
+  if (!resetForm.email) {
+    ElMessage.warning('请输入邮箱')
+    return
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(resetForm.email)) {
+    ElMessage.warning('邮箱格式不正确')
+    return
+  }
+
+  resetCodeLoading.value = true
+  try {
+    await request.post('/auth/send-reset-code', { email: resetForm.email })
+    ElMessage.success('验证码已发送，请查收邮件')
+
+    resetCodeTimer.value = 60
+    resetTimerInterval = setInterval(() => {
+      resetCodeTimer.value--
+      if (resetCodeTimer.value <= 0) {
+        clearInterval(resetTimerInterval)
+      }
+    }, 1000)
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.error || '发送失败')
+  } finally {
+    resetCodeLoading.value = false
+  }
+}
+
+const handleResetPassword = async () => {
+  if (!resetForm.email || !resetForm.code || !resetForm.newPassword || !resetForm.confirmPassword) {
+    ElMessage.warning('请填写完整信息')
+    return
+  }
+
+  if (resetForm.newPassword !== resetForm.confirmPassword) {
+    ElMessage.warning('两次输入的密码不一致')
+    return
+  }
+
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/
+  if (!passwordRegex.test(resetForm.newPassword)) {
+    ElMessage.warning('密码需至少6位，且包含字母和数字')
+    return
+  }
+
+  try {
+    await request.post('/auth/reset-password', {
+      email: resetForm.email,
+      code: resetForm.code,
+      newPassword: resetForm.newPassword
+    })
+    ElMessage.success('密码已重置，请使用新密码登录')
+    resetVisible.value = false
+    resetForm.email = ''
+    resetForm.code = ''
+    resetForm.newPassword = ''
+    resetForm.confirmPassword = ''
+    resetCodeTimer.value = 0
+    if (resetTimerInterval) clearInterval(resetTimerInterval)
+    activeTab.value = 'login'
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.error || '重置失败')
+  }
+}
 
 const handleLogin = async () => {
   if (!loginForm.account || !loginForm.password) {
@@ -177,6 +256,9 @@ const handleRegister = async () => {
                   立即登录
                 </el-button>
               </el-form-item>
+              <div class="login-actions">
+                <el-button link type="primary" @click="resetVisible = true">忘记密码？</el-button>
+              </div>
             </el-form>
           </el-tab-pane>
           
@@ -235,6 +317,32 @@ const handleRegister = async () => {
           </el-tab-pane>
         </el-tabs>
       </el-card>
+
+      <el-dialog v-model="resetVisible" title="密码找回" width="420px" destroy-on-close>
+        <el-form :model="resetForm" size="large">
+          <el-form-item>
+            <el-input v-model="resetForm.email" placeholder="邮箱地址" :prefix-icon="Message" />
+          </el-form-item>
+          <el-form-item>
+            <div class="code-row">
+              <el-input v-model="resetForm.code" placeholder="验证码" :prefix-icon="Key" />
+              <el-button type="primary" :disabled="resetCodeTimer > 0" :loading="resetCodeLoading" @click="sendResetCode" class="code-btn">
+                {{ resetCodeTimer > 0 ? `${resetCodeTimer}s` : '获取验证码' }}
+              </el-button>
+            </div>
+          </el-form-item>
+          <el-form-item>
+            <el-input v-model="resetForm.newPassword" type="password" placeholder="新密码 (至少6位，含字母数字)" :prefix-icon="Lock" show-password />
+          </el-form-item>
+          <el-form-item>
+            <el-input v-model="resetForm.confirmPassword" type="password" placeholder="确认新密码" :prefix-icon="Lock" show-password @keyup.enter="handleResetPassword" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="resetVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleResetPassword">确认重置</el-button>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -397,6 +505,12 @@ const handleRegister = async () => {
   height: 44px;
   border-radius: 8px;
   margin-top: 10px;
+}
+
+.login-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 2px 10px;
 }
 
 .code-row {
