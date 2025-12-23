@@ -7,6 +7,47 @@ export const useUserStore = defineStore('user', () => {
   const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}'))
   const loading = ref(false)
 
+  let expiryTimer: number | undefined
+
+  const clearExpiryTimer = () => {
+    if (expiryTimer) {
+      window.clearTimeout(expiryTimer)
+      expiryTimer = undefined
+    }
+  }
+
+  const getJwtExpMs = (jwtToken: string): number | null => {
+    const parts = jwtToken.split('.')
+    if (parts.length !== 3) return null
+    try {
+      const payloadPart = parts[1]
+      if (!payloadPart) return null
+      const payloadB64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+      const padded = payloadB64.padEnd(Math.ceil(payloadB64.length / 4) * 4, '=')
+      const payloadJson = JSON.parse(decodeURIComponent(escape(atob(padded))))
+      const exp = typeof payloadJson?.exp === 'number' ? payloadJson.exp : null
+      if (!exp) return null
+      return exp * 1000
+    } catch (_) {
+      return null
+    }
+  }
+
+  const scheduleTokenExpiry = () => {
+    clearExpiryTimer()
+    if (!token.value) return
+    const expMs = getJwtExpMs(token.value)
+    if (!expMs) return
+    const delay = expMs - Date.now()
+    if (delay <= 0) {
+      logout()
+      return
+    }
+    expiryTimer = window.setTimeout(() => {
+      logout()
+    }, delay)
+  }
+
   const login = async (loginForm: any) => {
     loading.value = true
     try {
@@ -17,6 +58,7 @@ export const useUserStore = defineStore('user', () => {
       // 持久化存储
       localStorage.setItem('token', res.token)
       localStorage.setItem('userInfo', JSON.stringify(res.user))
+      scheduleTokenExpiry()
       
       return res
     } catch (error) {
@@ -73,11 +115,14 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const logout = () => {
+    clearExpiryTimer()
     token.value = ''
     userInfo.value = {}
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
   }
+
+  scheduleTokenExpiry()
 
   return { token, userInfo, loading, login, register, logout, fetchUserInfo, checkIn }
 })

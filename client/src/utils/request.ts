@@ -5,6 +5,18 @@ const request = axios.create({
   timeout: 5000
 })
 
+const clearAuthStorage = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+}
+
+const redirectToLogin = () => {
+  const baseUrl = import.meta.env.BASE_URL || '/'
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+  const loginUrl = `${normalizedBase}login`
+  window.location.assign(loginUrl)
+}
+
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
@@ -26,7 +38,10 @@ request.interceptors.response.use(
     return response.data
   },
   (error) => {
-    console.error('Request Error:', error)
+    if (error?.response?.status === 401) {
+      clearAuthStorage()
+      redirectToLogin()
+    }
     return Promise.reject(error)
   }
 )
